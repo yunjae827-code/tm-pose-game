@@ -10,6 +10,7 @@ let poseEngine;
 let gameEngine;
 let stabilizer;
 let ctx;
+let gameCtx; // 게임 캔버스 컨텍스트
 let labelContainer;
 
 /**
@@ -44,6 +45,10 @@ async function init() {
     canvas.height = 200;
     ctx = canvas.getContext("2d");
 
+    // 4-1. 게임 캔버스 설정
+    const gameCanvas = document.getElementById("gameCanvas");
+    gameCtx = gameCanvas.getContext("2d");
+
     // 5. Label Container 설정
     labelContainer = document.getElementById("label-container");
     labelContainer.innerHTML = ""; // 초기화
@@ -59,11 +64,30 @@ async function init() {
     poseEngine.start();
 
     stopBtn.disabled = false;
+    document.getElementById("playBtn").disabled = false; // Play Game 버튼 활성화
   } catch (error) {
     console.error("초기화 중 오류 발생:", error);
     alert("초기화에 실패했습니다. 콘솔을 확인하세요.");
     startBtn.disabled = false;
   }
+}
+
+/**
+ * 게임 시작
+ */
+function playGame() {
+  if (!gameEngine) {
+    alert("먼저 Start 버튼을 눌러 초기화하세요.");
+    return;
+  }
+
+  gameEngine.setGameEndCallback((finalScore, finalLevel) => {
+    alert("게임 종료!\\n최종 점수: " + finalScore + "\\n최종 레벨: " + finalLevel);
+    document.getElementById("playBtn").disabled = false;
+  });
+
+  gameEngine.start({ timeLimit: 60 });
+  document.getElementById("playBtn").disabled = true;
 }
 
 /**
@@ -128,6 +152,12 @@ function drawPose(pose) {
       const minPartConfidence = 0.5;
       tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
       tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+    }
+
+    // 게임 엔진 루프 (업데이트 및 렌더링) - 별도 게임 캔버스에 렌더링
+    if (gameEngine && gameCtx) {
+      gameEngine.update();
+      gameEngine.render(gameCtx);
     }
   }
 }

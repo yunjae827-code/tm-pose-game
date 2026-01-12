@@ -78,3 +78,33 @@ button:disabled {
   border-radius: 4px;
   text-align: center;
 }
+
+/* 웹캠 + 게임 레이아웃 */
+.game-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.webcam-container,
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.webcam-container h3,
+.game-container h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.webcam-container {
+  position: relative;
+}
+
+#gameCanvas {
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  background-color: #ecf0f1;
+}
