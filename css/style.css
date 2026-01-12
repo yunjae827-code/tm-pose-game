@@ -108,3 +108,84 @@ button:disabled {
   border-radius: 8px;
   background-color: #ecf0f1;
 }
+
+.game-canvas-wrapper {
+  position: relative;
+}
+
+/* 게임 오버레이 */
+.game-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.game-overlay.hidden {
+  display: none;
+}
+
+.overlay-content {
+  text-align: center;
+  color: white;
+  padding: 30px;
+}
+
+.overlay-content h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.overlay-content p {
+  font-size: 20px;
+  margin: 10px 0;
+}
+
+.overlay-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.overlay-buttons button {
+  padding: 12px 24px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#nextLevelBtn {
+  background-color: #27ae60;
+  color: white;
+}
+
+#nextLevelBtn:hover {
+  background-color: #2ecc71;
+}
+
+#retryBtn {
+  background-color: #3498db;
+  color: white;
+}
+
+#retryBtn:hover {
+  background-color: #2980b9;
+}
+
+#stopGameBtn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+#stopGameBtn:hover {
+  background-color: #c0392b;
+}

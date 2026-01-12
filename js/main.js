@@ -75,19 +75,100 @@ async function init() {
 /**
  * 게임 시작
  */
+let currentLevel = 1;
+let totalScore = 0;
+
 function playGame() {
   if (!gameEngine) {
     alert("먼저 Start 버튼을 눌러 초기화하세요.");
     return;
   }
 
-  gameEngine.setGameEndCallback((finalScore, finalLevel) => {
-    alert("게임 종료!\\n최종 점수: " + finalScore + "\\n최종 레벨: " + finalLevel);
+  // 오버레이 숨기기
+  document.getElementById("gameOverlay").classList.add("hidden");
+
+  gameEngine.setGameEndCallback((finalScore, finalLevel, levelCleared) => {
+    totalScore += finalScore;
+
+    const targetScore = currentLevel * 1000;
+
+    // 오버레이 업데이트
+    const overlay = document.getElementById("gameOverlay");
+    const title = document.getElementById("overlayTitle");
+    const scoreText = document.getElementById("overlayScore");
+    const levelText = document.getElementById("overlayLevel");
+    const nextBtn = document.getElementById("nextLevelBtn");
+    const retryBtn = document.getElementById("retryBtn");
+
+    if (levelCleared) {
+      title.textContent = "🎉 레벨 " + currentLevel + " 클리어!";
+      nextBtn.style.display = "inline-block";
+      retryBtn.style.display = "none";
+    } else {
+      if (finalScore === 0) {
+        title.textContent = "💥 점수 부족!";
+      } else {
+        title.textContent = "⏰ 시간 초과!";
+      }
+      nextBtn.style.display = "none";
+      retryBtn.style.display = "inline-block";
+    }
+
+    scoreText.textContent = "이번 점수: " + finalScore + " (목표: " + targetScore + ") / 총 점수: " + totalScore;
+    levelText.textContent = "현재 레벨: " + currentLevel;
+
+    overlay.classList.remove("hidden");
     document.getElementById("playBtn").disabled = false;
   });
 
-  gameEngine.start({ timeLimit: 60 });
+  // 레벨별 시간 제한: 60초 × 레벨 (레벨1=60초, 레벨2=120초...)
+  const timeLimit = currentLevel * 60;
+  gameEngine.start({ timeLimit: timeLimit, currentLevel: currentLevel, targetScore: currentLevel * 1000 });
   document.getElementById("playBtn").disabled = true;
+}
+
+/**
+ * 다음 레벨
+ */
+function nextLevel() {
+  currentLevel++;
+  document.getElementById("gameOverlay").classList.add("hidden");
+  playGame();
+}
+
+/**
+ * 현재 레벨 다시하기
+ */
+function retryLevel() {
+  // 현재 레벨 유지, 이번 판 점수만 리셋
+  document.getElementById("gameOverlay").classList.add("hidden");
+  playGame();
+}
+
+/**
+ * 게임 완전 종료 (레벨 및 점수 리셋)
+ */
+function stopGame() {
+  document.getElementById("gameOverlay").classList.add("hidden");
+  currentLevel = 1;
+  totalScore = 0;
+  document.getElementById("playBtn").disabled = false;
+
+  // 게임 캔버스 초기화
+  if (gameCtx) {
+    const canvas = document.getElementById("gameCanvas");
+    gameCtx.clearRect(0, 0, canvas.width, canvas.height);
+    gameCtx.fillStyle = '#ecf0f1';
+    gameCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 초기 메시지 표시
+    gameCtx.fillStyle = '#2c3e50';
+    gameCtx.font = 'bold 24px Arial';
+    gameCtx.textAlign = 'center';
+    gameCtx.fillText('🎮 Play Game을 눌러 시작!', canvas.width / 2, canvas.height / 2 - 20);
+    gameCtx.font = '18px Arial';
+    gameCtx.fillText('레벨 1 | 목표: 1000점 | 시간: 60초', canvas.width / 2, canvas.height / 2 + 20);
+  }
 }
 
 /**

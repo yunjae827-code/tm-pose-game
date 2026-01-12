@@ -24,7 +24,22 @@
     <!-- 게임 영역 -->
     <div class="game-container">
       <h3>🎮 게임</h3>
-      <canvas id="gameCanvas" width="400" height="400"></canvas>
+      <div class="game-canvas-wrapper">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <!-- 게임 오버 오버레이 -->
+        <div id="gameOverlay" class="game-overlay hidden">
+          <div class="overlay-content">
+            <h2 id="overlayTitle">🎉 레벨 클리어!</h2>
+            <p id="overlayScore">총 점수: 0</p>
+            <p id="overlayLevel">현재 레벨: 1</p>
+            <div class="overlay-buttons">
+              <button id="nextLevelBtn" onclick="nextLevel()">다음 레벨 ▶</button>
+              <button id="retryBtn" onclick="retryLevel()">다시하기 🔄</button>
+              <button id="stopGameBtn" onclick="stopGame()">게임 종료 ⏹</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="label-container"></div>
