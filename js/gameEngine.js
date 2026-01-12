@@ -27,6 +27,10 @@ class GameEngine {
     this.feedbackMessage = '';
     this.feedbackTimer = null;
 
+    // 오디오 컨텍스트 (효과음용)
+    this.audioContext = null;
+    this.initAudio();
+
     // 3개 구역 정의 (LEFT, CENTER, RIGHT)
     this.laneWidth = this.canvasWidth / 3;
     this.lanes = [
@@ -111,18 +115,90 @@ class GameEngine {
 
   handleCollection(obj) {
     let points = 0;
-    let isBad = false;
 
     if (obj.type === 'apple') points = 100;
     else if (obj.type === 'orange') points = 200;
     else if (obj.type === 'grape') points = 300;
-    else if (obj.type === 'bomb') { points = -100; isBad = true; }
-    else if (obj.type === 'dynamite') { points = -300; isBad = true; }
+    else if (obj.type === 'bomb' || obj.type === 'dynamite') {
+      // 폭탄/다이너마이트는 폭발 후 게임 오버!
+      this.playExplosionSound();
+      this.showFeedback('💥 BOOM!');
+      this.explosionEffect = { x: this.basket.x + this.basket.width / 2, y: this.basket.y, timer: 30 };
+      this.levelCleared = false;
 
-    // 피드백 메시지 표시
-    this.showFeedback(isBad ? 'Try Harder!' : 'Good!');
+      // 0.5초 후 게임 오버
+      setTimeout(() => {
+        this.stop();
+      }, 500);
+      return;
+    }
+
+    // 과일 효과음 및 피드백
+    this.playBellSound();
+    this.showFeedback('Good!');
 
     this.addScore(points);
+  }
+
+  initAudio() {
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.log('오디오 초기화 실패:', e);
+    }
+  }
+
+  // 종소리 효과음 (띠링)
+  playBellSound() {
+    if (!this.audioContext) return;
+
+    // 두 개의 주파수로 종소리 효과
+    [1200, 1500].forEach((freq, i) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      gainNode.gain.value = 0.2;
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+
+      oscillator.start(this.audioContext.currentTime + i * 0.05);
+      oscillator.stop(this.audioContext.currentTime + 0.3);
+    });
+  }
+
+  // 폭발 효과음 (붐!)
+  playExplosionSound() {
+    if (!this.audioContext) return;
+
+    // 노이즈 기반 폭발음
+    const bufferSize = this.audioContext.sampleRate * 0.5;
+    const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize / 3));
+    }
+
+    const source = this.audioContext.createBufferSource();
+    const gainNode = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+
+    source.buffer = buffer;
+    filter.type = 'lowpass';
+    filter.frequency.value = 500;
+
+    source.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    gainNode.gain.value = 0.5;
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+
+    source.start();
   }
 
   showFeedback(message) {
@@ -266,6 +342,14 @@ class GameEngine {
         ctx.fillStyle = '#e74c3c';
       }
       ctx.fillText(this.feedbackMessage, this.canvasWidth / 2, 70);
+    }
+
+    // 폭발 이펙트 표시
+    if (this.explosionEffect && this.explosionEffect.timer > 0) {
+      ctx.font = '60px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('💥', this.explosionEffect.x, this.explosionEffect.y);
+      this.explosionEffect.timer--;
     }
   }
 
